@@ -4,10 +4,26 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"regexp"
 )
+
+func findMatchingLines(r io.Reader, re *regexp.Regexp) ([]string, error) {
+	scanner := bufio.NewScanner(r)
+	lineMatches := []string{}
+	for scanner.Scan() {
+
+		if re.MatchString(scanner.Text()) {
+			lineMatches = append(lineMatches, scanner.Text())
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return lineMatches, nil
+}
 
 func fileExists(filename string) bool {
 	info, err := os.Stat(filename)
@@ -48,25 +64,14 @@ func main() {
 		os.Exit(1)
 	} //modified from https://gobyexample.com/reading-files
 
-	scanner := bufio.NewScanner(bytes.NewReader(dat))
-	var re = regexp.MustCompile(findString)
-
-	for scanner.Scan() {
-		if re.MatchString(scanner.Text()) {
-			fmt.Println(scanner.Text())
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
+	r := bytes.NewReader(dat)
+	re := regexp.MustCompile(findString)
+	lines, err := findMatchingLines(r, re)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 	} //https://golang.org/pkg/bufio/#example_Scanner_lines
 
-	// match, _ := regexp.MatchString("([a-z]+)", findString)
-	// if !match {
-	// 	fmt.Printf("Unable to find %s.", findString)
-	// 	os.Exit(1)
-	// }
-	// r, _ := regexp.Compile("([a-z]+)") //https://gobyexample.com/regular-expressions
-
-	// fmt.Println(r.FindAllString(findString, -1))
-
+	for _, l := range lines {
+		fmt.Println(l)
+	}
 }
