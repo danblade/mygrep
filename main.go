@@ -44,10 +44,16 @@ func main() { //myGrep
 	findString := os.Args[1]
 	fmt.Printf("looking for \"%s\".\n", findString)
 
-	re, _ := regexp.Compile(findString)
+	re, err := regexp.Compile(findString)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
 	lines, err := findMatchingLines(r, re)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 
 	for _, l := range lines {
